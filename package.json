@@ -1,0 +1,52 @@
+{
+  "name": "@ryanbekhen/gsm-serial",
+  "version": "1.0.0",
+  "description": "Simple library which allows to use GSM Modem using NodeJS via serial port",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "scripts": {
+    "test": "jest --config jestconfig.json",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "tslint -p tsconfig.json",
+    "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "keywords": [
+    "GSM Serial Port",
+    "Serial Port"
+  ],
+  "author": {
+    "name": "Achmad Irianto Eka Putra",
+    "email": "ryanbekhen.official@gmail.com",
+    "url": "https://www.ryanbekhen.me"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ryanbekhen/gsm-serial.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ryanbekhen/gsm-serial/issues"
+  },
+  "homepage": "https://github.com/ryanbekhen/gsm-serial#readme",
+  "dependencies": {
+    "serialport": "^9.2.8"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.3",
+    "@types/serialport": "^8.0.2",
+    "jest": "^27.4.5",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.5.4"
+  }
+}
