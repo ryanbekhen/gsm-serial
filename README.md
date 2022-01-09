@@ -20,7 +20,7 @@ npm i @ryanbekhen/gsm-serial # npm package manager
 ## Example Code
 
 ```typescript
-import { GSMSerial } from "../src/gsm-serial";
+import { GSMSerial } from "@ryanbekhen/gsm-serial";
 
 async function bootstrap() {
   const gsm: GSMSerial = new GSMSerial(

@@ -1,3 +1,4 @@
-export * from './cmgl-response.interface';
-export * from './gsm-serial-options.interface';
-export * from './get-all-messages-options.interface';
+export * from './message';
+export * from './device-info';
+export * from './gsm-serial-options';
+export * from './get-all-messages-options';

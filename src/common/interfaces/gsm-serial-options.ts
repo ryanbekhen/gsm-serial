@@ -26,4 +26,6 @@ export interface IGSMSerialOptions {
   xoff?: boolean | undefined;
   rtscts?: boolean | undefined;
   xany?: boolean | undefined;
+  interval?: number | undefined;
+  timeout?: number | undefined;
 }

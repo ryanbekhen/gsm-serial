@@ -5,7 +5,7 @@ describe('GSM Serial Module', () => {
 
   beforeAll(async () => {
     gsm = new GSMSerial(
-      "/dev/ttyXRUSB14",
+      "/dev/ttyXRUSB13",
       {
         baudRate: 115200,
         dataBits: 8,

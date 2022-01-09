@@ -1,4 +1,4 @@
-export interface ICMGLResponse {
+export interface IMessage {
   id: string; // Index
   stat: string; // Status
   oa: string; // Originator address
