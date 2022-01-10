@@ -1,7 +1,7 @@
 import * as SerialPort from 'serialport';
 import { CMGLToJson, CUSDToJson } from './common/helpers';
 import { IMessage, IGSMSerialOptions, IGetAllMessageOptions, IDeviceInfo, IUSSDMessage } from './common/interfaces';
-import { timeout, sessionID} from './common/utils';
+import { timeout, sessionID } from './common/utils';
 
 /**
  * Simple library which allows to use GSM Modem using NodeJS via serial port.
@@ -127,7 +127,7 @@ export class GSMSerial {
   getUSSD(code: string, session?: string): Promise<IUSSDMessage> {
     return new Promise<IUSSDMessage>(async (resolve, reject) => {
       try {
-        if (session && session !== this.lastSession || !session) {
+        if ((session && session !== this.lastSession) || !session) {
           await this.ATCommand('AT+CUSD=2', 'OK');
         }
 
@@ -137,8 +137,6 @@ export class GSMSerial {
 
         const isCanReply = CUSDToJson(response)[2] === '0' ? true : false;
 
-
-        console.log(response)
         if (isCanReply) {
           this.lastSession = sessionID();
           resolve({
@@ -146,7 +144,7 @@ export class GSMSerial {
             session: this.lastSession,
           });
         } else {
-          resolve({ message })
+          resolve({ message });
         }
       } catch (ex) {
         reject(ex);

@@ -1,4 +1,4 @@
 export interface IUSSDMessage {
-  message: string,
-  session?: string,
+  message: string;
+  session?: string;
 }
