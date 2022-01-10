@@ -17,7 +17,12 @@ async function bootstrap() {
       console.log(await gsm.getAllMessages({
         unreadOnly: false
       }));
-      console.log((await gsm.getUSSD('*888*7#')));
+      const response = await gsm.getUSSD('*888#');
+      console.log(response);
+      const response1 = await gsm.getUSSD('*888#');
+      console.log(response1);
+      const response2 = await gsm.getUSSD('7', response1.session);
+      console.log(response2);
     } else {
       console.log('device is inactive');
     }

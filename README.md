@@ -33,14 +33,25 @@ async function bootstrap() {
     }
   );
   try {
-    await gsm.initialize();
-    console.log(await gsm.deviceInfo());
-    console.log(await gsm.getAllMessages({
-      unreadOnly: true
-    }));
+    if(await gsm.check()) {
+      console.log(await GSMSerial.ports());
+      console.log(await gsm.deviceInfo());
+      console.log(await gsm.getAllMessages({
+        unreadOnly: false
+      }));
+      await gsm.sendMessage('+628xxxxxxxxxx', 'gsm serial testing sent message.')
+      const response = await gsm.getUSSD('*888#');
+      console.log(response);
+      const response1 = await gsm.getUSSD('7', response1.session);
+      console.log(response1);
+    } else {
+      console.log('device is inactive');
+    }
     await gsm.close();
   } catch(ex) {
     console.log(ex);
+  } finally {
+    process.exit(1);
   }
 }
 

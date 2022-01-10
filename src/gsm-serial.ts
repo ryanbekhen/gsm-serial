@@ -1,7 +1,7 @@
 import * as SerialPort from 'serialport';
 import { CMGLToJson, CUSDToJson } from './common/helpers';
-import { IMessage, IGSMSerialOptions, IGetAllMessageOptions, IDeviceInfo } from './common/interfaces';
-import { timeout } from './common/utils';
+import { IMessage, IGSMSerialOptions, IGetAllMessageOptions, IDeviceInfo, IUSSDMessage } from './common/interfaces';
+import { timeout, sessionID} from './common/utils';
 
 /**
  * Simple library which allows to use GSM Modem using NodeJS via serial port.
@@ -11,6 +11,7 @@ import { timeout } from './common/utils';
 export class GSMSerial {
   private serialPort: SerialPort;
   private options: IGSMSerialOptions;
+  private lastSession: string = sessionID();
   public device: string;
 
   /**
@@ -87,8 +88,8 @@ export class GSMSerial {
    */
   deviceInfo(): Promise<IDeviceInfo> {
     return new Promise<IDeviceInfo>(async (resolve, reject) => {
-      const command = ['AT+CGMI', 'AT+CGMM', 'AT+CGMR'];
-      const keyInfo = ['manufacture', 'model', 'revision'];
+      const command = ['AT+CGMI', 'AT+CGMM', 'AT+CGMR', 'AT+CIMI'];
+      const keyInfo = ['manufacture', 'model', 'revision', 'imsi'];
       this.ATCommand(command.join('\r\n'))
         .then((ports) => ports.filter((port) => !command.concat(['OK']).includes(port.trim())))
         .then((ports) => {
@@ -120,16 +121,33 @@ export class GSMSerial {
 
   /**
    * Get Unstructured Supplementary Service Data (USSD)
-   * @param code - ussd code
-   * @returns message from service operator
+   * @param code - ussd code or reply messages
+   * @returns message from service operator with ussd session to reply to operator message
    */
-  getUSSD(code: string): Promise<string> {
-    return new Promise(async (resolve, reject) => {
+  getUSSD(code: string, session?: string): Promise<IUSSDMessage> {
+    return new Promise<IUSSDMessage>(async (resolve, reject) => {
       try {
+        if (session && session !== this.lastSession || !session) {
+          await this.ATCommand('AT+CUSD=2', 'OK');
+        }
+
         await this.ATCommand(`AT+CSCS="GSM"`, 'OK');
         const response = await this.ATCommand(`AT+CUSD=1,\"${code}\",15`, 'OK');
-        await this.ATCommand('AT+CUSD=2', 'OK');
-        resolve(CUSDToJson(response));
+        const message = CUSDToJson(response)[1];
+
+        const isCanReply = CUSDToJson(response)[2] === '0' ? true : false;
+
+
+        console.log(response)
+        if (isCanReply) {
+          this.lastSession = sessionID();
+          resolve({
+            message,
+            session: this.lastSession,
+          });
+        } else {
+          resolve({ message })
+        }
       } catch (ex) {
         reject(ex);
       }
