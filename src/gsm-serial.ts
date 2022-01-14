@@ -82,7 +82,7 @@ export class GSMSerial {
       try {
         const response = await this.ATCommand('AT');
         resolve(response[response.length - 1] === 'AT' ? false : true);
-      } catch(ex) {
+      } catch (ex) {
         reject(ex);
       }
     });
@@ -98,14 +98,14 @@ export class GSMSerial {
       const keyInfo = ['manufacture', 'model', 'revision', 'imsi'];
       try {
         const ports = (await this.ATCommand(command.join('\r\n'))).filter(
-          (port) => !command.concat(['OK']).includes(port.trim())
+          (port) => !command.concat(['OK']).includes(port.trim()),
         );
         const temp: IDeviceInfo = {};
         if (ports.length > 0) {
           keyInfo.forEach((key, index) => Object.assign(temp, { [key]: ports[index].trim() }));
           resolve(temp);
         } else {
-          reject(new Error('not connnectedd'))
+          reject(new Error('not connnectedd'));
         }
       } catch (ex) {
         reject(ex);
@@ -173,7 +173,7 @@ export class GSMSerial {
       try {
         await this.ATCommand('AT+CMGD=1,2', 'OK');
         resolve();
-      } catch(ex) {
+      } catch (ex) {
         reject(ex);
       }
     });
@@ -227,10 +227,9 @@ export class GSMSerial {
           if (!readUntil) {
             const ms = this.options.interval ? this.options.interval : 1000;
             let intervalProcess = 0;
-            let processTimeout = this.options.timeout ? this.options.timeout : 5000;
+            const processTimeout = this.options.timeout ? this.options.timeout : 5000;
 
             const interval = setInterval(() => {
-
               intervalProcess += ms;
               if (intervalProcess >= processTimeout) {
                 clearInterval(interval);
@@ -248,7 +247,6 @@ export class GSMSerial {
                 this.serialPort.unpipe();
                 resolve(result);
               }
-
             }, ms);
           }
         });
