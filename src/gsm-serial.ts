@@ -1,8 +1,7 @@
 import * as SerialPort from 'serialport';
-import { CMGLToJson, CUSDToJson } from './common/helpers';
-import { IMessage, IGSMSerialOptions, IGetAllMessageOptions, IDeviceInfo, IUSSDMessage } from './common/interfaces';
-import { timeout, sessionID } from './common/utils';
-
+import { CUSDToJson, CMGLToJson } from './helpers';
+import { IGSMSerialOptions, IDeviceInfo, IUSSDMessage, IGetAllMessageOptions, IMessage } from './interfaces';
+import { sessionID, timeout } from './utils';
 /**
  * Simple library which allows to use GSM Modem using NodeJS via serial port.
  * @public
@@ -53,8 +52,12 @@ export class GSMSerial {
     return new Promise<void>((resolve, reject) => {
       this.serialPort.on('open', async () => {
         const initcommand = ['ATZ', 'AT+CMEE=1', 'AT+CREG=2', 'AT+CMGF=1'];
-        await this.ATCommand(initcommand.join('\r\n'));
-        resolve();
+        try {
+          await this.ATCommand(initcommand.join('\r\n'));
+          resolve();
+        } catch (ex) {
+          reject(ex);
+        }
       });
       this.serialPort.on('error', reject);
     });
@@ -75,10 +78,13 @@ export class GSMSerial {
    * @returns returns true if it can respond
    */
   check(): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-      this.ATCommand('AT')
-        .then((response) => resolve(response[response.length - 1] === 'AT' ? false : true))
-        .catch(reject);
+    return new Promise<boolean>(async (resolve, reject) => {
+      try {
+        const response = await this.ATCommand('AT');
+        resolve(response[response.length - 1] === 'AT' ? false : true);
+      } catch(ex) {
+        reject(ex);
+      }
     });
   }
 
@@ -90,14 +96,20 @@ export class GSMSerial {
     return new Promise<IDeviceInfo>(async (resolve, reject) => {
       const command = ['AT+CGMI', 'AT+CGMM', 'AT+CGMR', 'AT+CIMI'];
       const keyInfo = ['manufacture', 'model', 'revision', 'imsi'];
-      this.ATCommand(command.join('\r\n'))
-        .then((ports) => ports.filter((port) => !command.concat(['OK']).includes(port.trim())))
-        .then((ports) => {
-          const temp: IDeviceInfo = {};
+      try {
+        const ports = (await this.ATCommand(command.join('\r\n'))).filter(
+          (port) => !command.concat(['OK']).includes(port.trim())
+        );
+        const temp: IDeviceInfo = {};
+        if (ports.length > 0) {
           keyInfo.forEach((key, index) => Object.assign(temp, { [key]: ports[index].trim() }));
           resolve(temp);
-        })
-        .catch(reject);
+        } else {
+          reject(new Error('not connnectedd'))
+        }
+      } catch (ex) {
+        reject(ex);
+      }
     });
   }
 
@@ -157,10 +169,13 @@ export class GSMSerial {
    * @returns promise void
    */
   deleteAllMessages(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      this.ATCommand('AT+CMGD=1,2', 'OK')
-        .then(() => resolve())
-        .catch(reject);
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        await this.ATCommand('AT+CMGD=1,2', 'OK');
+        resolve();
+      } catch(ex) {
+        reject(ex);
+      }
     });
   }
 
@@ -193,7 +208,7 @@ export class GSMSerial {
         time = process.hrtime();
 
         if (chunk.trim().match('ERROR')) {
-          reject(new Error('Something wrong with result ' + chunk.trim()));
+          reject(new Error(`${this.device}: Something wrong with result ${chunk.trim()}`));
         }
 
         result.push(chunk);
@@ -211,8 +226,20 @@ export class GSMSerial {
         this.serialPort.drain((_) => {
           if (!readUntil) {
             const ms = this.options.interval ? this.options.interval : 1000;
+            let intervalProcess = 0;
+            let processTimeout = this.options.timeout ? this.options.timeout : 5000;
+
             const interval = setInterval(() => {
+
+              intervalProcess += ms;
+              if (intervalProcess >= processTimeout) {
+                clearInterval(interval);
+                this.serialPort.unpipe();
+                reject(Error(`${this.device}: The operation has timed out.`));
+              }
+
               if (!time) return;
+
               const diff = process.hrtime(time);
               const diffMs = diff[0] * 1000 + Math.round(diff[1] / 1000000);
 
@@ -221,11 +248,12 @@ export class GSMSerial {
                 this.serialPort.unpipe();
                 resolve(result);
               }
+
             }, ms);
           }
         });
       });
     });
-    return timeout(response, this.options.timeout);
+    return response;
   }
 }

@@ -5,12 +5,11 @@ describe('GSM Serial Module', () => {
 
   beforeAll(async () => {
     gsm = new GSMSerial(
-      "/dev/ttyXRUSB13",
+      "/dev/ttyXRUSB14",
       {
         baudRate: 115200,
-        dataBits: 8,
-        stopBits: 1,
-        parity: "none",
+        interval: 100,
+        timeout: 5000
       }
     );
 
@@ -22,16 +21,25 @@ describe('GSM Serial Module', () => {
       expect(data).toHaveProperty('manufacture');
       expect(data).toHaveProperty('model');
       expect(data).toHaveProperty('revision');
+      expect(data).toHaveProperty('imsi');
+    });
+  });
+
+  it('read messsages', () => {
+    return gsm.getAllMessages().then((data) => {
+      expect(data).toBeInstanceOf(Array)
     });
   });
 
   it('sent message', () => {
-    return expect(gsm.sendMessage('+6282395984045', 'gsm serial testing sent message.')).resolves.toBeUndefined();
+    return expect(gsm.sendMessage('+6282395984045', 'gsm serial testing sent message.')).resolves.toBeUndefined()
   });
 
-  it('read messsages', () => {
-    return expect(gsm.getAllMessages()).resolves.toBeInstanceOf(Array);
-  });
+  it('read ussd', () => {
+    return gsm.getUSSD('*888#').then(data => {
+      expect(data).toHaveProperty('message');
+    })
+  }, 10000)
 
   it('delete all messages', () => {
     return expect(gsm.deleteAllMessages()).resolves.toBeUndefined();
