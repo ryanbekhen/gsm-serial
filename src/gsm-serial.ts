@@ -1,7 +1,7 @@
 import * as SerialPort from 'serialport';
 import { CUSDToJson, CMGLToJson } from './helpers';
 import { IGSMSerialOptions, IDeviceInfo, IUSSDMessage, IGetAllMessageOptions, IMessage } from './interfaces';
-import { sessionID, timeout } from './utils';
+import { sessionID } from './utils';
 /**
  * Simple library which allows to use GSM Modem using NodeJS via serial port.
  * @public
